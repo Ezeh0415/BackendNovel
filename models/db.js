@@ -4,7 +4,7 @@ let dbConnection;
 
 async function connectDB() {
   try {
-    const client = await MongoClient.connect(process.env.MONGODB_URI, {
+    const client = await MongoClient.connect(`mongodb://localhost:27017/bookstore`, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
