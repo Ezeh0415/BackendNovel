@@ -1,15 +1,10 @@
 const { MongoClient } = require("mongodb");
 
-
-const uri = process.env.MONGODB_URI;
 let dbConnection;
 
 async function connectDB() {
-  if (!uri) {
-    throw new Error("MONGODB_URI is not defined in environment variables.");
-  }
   try {
-    const client = await MongoClient.connect(uri, {
+    const client = await MongoClient.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
