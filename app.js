@@ -1,7 +1,9 @@
+require("dotenv").config();
 const express = require("express");
 const { connectDB } = require("./models/db");
 const cors = require("cors");
 const bookRoutes = require("./routes/bookRoutes");
+
 
 // init and middleware
 const app = express();
