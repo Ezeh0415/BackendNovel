@@ -1,10 +1,14 @@
 const { MongoClient } = require("mongodb");
-
+const uri = process.env.MONGODB_URI;
 let dbConnection;
 
 async function connectDB() {
+
+  if (!uri) {
+    throw new Error("❌ MONGODB_URI is not defined in Railway variables.");
+  }
   try {
-    const client = await MongoClient.connect(`mongodb://localhost:27017/bookstore`, {
+    const client = await MongoClient.connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
