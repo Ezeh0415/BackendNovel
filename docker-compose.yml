@@ -1,4 +1,5 @@
 version: "3.8"
+
 services:
   app:
     build: .
@@ -8,9 +9,7 @@ services:
       - .env
     depends_on:
       - mongo
-    volumes:
-      - .:/app
-    command: ["node", "app.js"]
+
   mongo:
     image: mongo:6
     restart: always
@@ -18,5 +17,6 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+
 volumes:
   mongo-data:
