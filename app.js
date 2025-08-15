@@ -10,10 +10,9 @@ app.use(express.json());
 // dbConnection
 connectDB()
   .then(() => {
-    app.listen(3000, () => {
-      console.log(`listening to port 3000`);
+    app.listen(process.env.PORT, () => {
+      console.log(`listening to port ${process.env.PORT}`);
     });
-    
   })
   .catch((err) => {
     console.error("Failed to connect to DB:", err);

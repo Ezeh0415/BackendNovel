@@ -2,6 +2,9 @@
 const { ObjectId } = require("mongodb");
 const { getDB } = require("../models/db");
 const Novels = require("../models/Novel");
+// const crypto = require("crypto");
+
+// const secretKey = crypto.randomBytes(64).toString("hex");
 
 exports.getAllBooks = async (req, res) => {
   try {
@@ -38,7 +41,7 @@ exports.getBookById = async (req, res) => {
 exports.createBook = async (req, res) => {
   const db = getDB();
   const book = new Novels(req.body);
-  
+
   try {
     const result = await db.collection("books").insertOne(book);
     res.status(200).json(result);
