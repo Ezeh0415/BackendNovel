@@ -9,6 +9,7 @@ const Novels = require("../models/Novel");
 exports.getAllBooks = async (req, res) => {
   try {
     const db = getDB();
+
     const books = await db
       .collection("books")
       .find()

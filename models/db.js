@@ -12,7 +12,7 @@ async function connectDB() {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    dbConnection = client.db();
+    dbConnection = client.db("bookstore");
     console.log("Connected to MongoDB");
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
