@@ -9,13 +9,14 @@ const Novels = require("../models/Novel");
 exports.getAllBooks = async (req, res) => {
   try {
     const db = getDB();
-
+    const bookCount = await db.collection("books").find().count();
     const books = await db
       .collection("books")
       .find()
       .sort({ title: 1 })
       .toArray();
-    res.status(200).json({ data: books });
+    console.log("Book:");
+    res.status(200).json({ count: bookCount, data: books });
   } catch (error) {
     console.error("Failed to get books:", error);
     res.status(500).json({ error: "Failed to get books" });
