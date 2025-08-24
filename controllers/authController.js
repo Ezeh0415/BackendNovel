@@ -7,9 +7,9 @@ const saltRounds = 10;
 
 const signup = async (req, res) => {
   const user = new User(req.body);
-  const { username, email, password } = user;
+  const { firstName, lastName, email, password } = user;
 
-  if (!username || !email || !password) {
+  if (!firstName || !lastName || !email || !password) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
 
@@ -27,7 +27,8 @@ const signup = async (req, res) => {
 
     // Create the user
     const result = await db.collection("users").insertOne({
-      username,
+      firstName,
+      lastName,
       email,
       password: hash,
     });
@@ -37,7 +38,10 @@ const signup = async (req, res) => {
       : await db.collection("users").findOne({ _id: result.insertedId });
 
     // Generate tokens
-  const { accessToken, refreshToken } = generateTokens({ id: user._id, username: user.username });
+    const { accessToken, refreshToken } = generateTokens({
+      id: user._id,
+      firstName: user.firstName,
+    });
 
     // Set refresh token in HTTP-only cookie
     res.cookie("refreshToken", refreshToken, {
@@ -51,14 +55,15 @@ const signup = async (req, res) => {
     res.status(201).json({
       user: {
         id: newUser._id,
-        username: newUser.username,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
         email: newUser.email,
       },
       accessToken,
     });
   } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Signup error:", err); // log full error for devs/admins
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -109,7 +114,6 @@ const login = async (req, res) => {
       accessToken,
     });
     console.log("successfully logged in");
-    
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error", error: err.message });

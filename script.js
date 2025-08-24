@@ -6,8 +6,7 @@ const user = {
 
 const Base_Url = "http://localhost:8080";
 
-const handleSubmit = async () => {
-
+const handleSubmit = () => {
   fetch(`${Base_Url}/signup`, {
     method: "POST",
     headers: {
