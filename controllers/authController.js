@@ -37,10 +37,7 @@ const signup = async (req, res) => {
       : await db.collection("users").findOne({ _id: result.insertedId });
 
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokens({
-      id: newUser._id,
-      email: newUser.email,
-    });
+  const { accessToken, refreshToken } = generateTokens({ id: user._id, username: user.username });
 
     // Set refresh token in HTTP-only cookie
     res.cookie("refreshToken", refreshToken, {
@@ -111,6 +108,8 @@ const login = async (req, res) => {
 
       accessToken,
     });
+    console.log("successfully logged in");
+    
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
