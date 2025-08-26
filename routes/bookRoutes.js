@@ -4,7 +4,7 @@ const router = express.Router();
 const bookController = require("../controllers/bookController");
 const authController = require("../controllers/authController");
 
-// authController 
+// authController
 
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);

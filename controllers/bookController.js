@@ -78,34 +78,27 @@ exports.addLikes = async (req, res) => {
   const db = getDB();
   const userId = req.params.id;
   const like = req.body;
-
   // Validate userId
   if (!ObjectId.isValid(userId)) {
     return res.status(400).json({ error: "Invalid user ID format" });
   }
 
   // Validate like object (example: must have itemId and optionally timestamp)
-  // if (!like || typeof like !== "object" || !like.itemId) {
-  //   return res.status(400).json({ error: "Invalid like data. 'itemId' is required." });
-  // }
+  if (!like || typeof like !== "object" || (!like.id && !like.Id)) {
+    return res
+      .status(400)
+      .json({ error: "Invalid like data. 'id' is required." });
+  }
 
   try {
     // Use $addToSet to prevent duplicate likes
     const result = await db.collection("users").findOneAndUpdate(
       { _id: new ObjectId(userId) },
       { $addToSet: { likes: like } },
-      { returnDocument: "after" }  // return updated document after update
+      { returnDocument: "after" } // return updated document after update
     );
 
-    if (!result.value) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    res.status(200).json({
-      message: "Like added successfully",
-      likes: result.value.likes  // send updated likes array
-    });
-
+    res.status(200).json({ message: "Like added successfully" });
   } catch (error) {
     console.error("Failed to add like:", error);
     res.status(500).json({ error: "Failed to add like" });

@@ -58,6 +58,7 @@ const signup = async (req, res) => {
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         email: newUser.email,
+        likes: newUser.likes,
       },
       accessToken,
     });
@@ -110,6 +111,7 @@ const login = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        likes: user.likes,
       },
 
       accessToken,
