@@ -14,6 +14,7 @@ router.get("/books", bookController.getAllBooks);
 router.get("/books/:id", bookController.getBookById);
 router.post("/books", bookController.createBook);
 router.post("/books/reviews/:id", bookController.addReview);
+router.post("/books/liked/:id", bookController.addLikes);
 router.patch("/books/update/:id", bookController.updateBook);
 router.delete("/books/:id", bookController.deleteBook);
 
