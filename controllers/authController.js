@@ -128,4 +128,23 @@ const logout = async (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 };
 
-module.exports = { signup, login, logout };
+const novelLiked = async (req, res) => {
+  const db = getDB();
+  let likesArray = [];
+
+  try {
+    await db
+      .collection("users")
+      .find({}, { projection: { likes: 1, _id: 0 } }) // Only get 'likes', exclude '_id'
+      .forEach((user) => {
+        if (user.likes) likesArray.push(...user.likes); // Collect all likes from all users into one array
+      });
+
+    res.status(200).json({ data: likesArray });
+  } catch (err) {
+    console.error("Failed to get likes:", err);
+    res.status(500).json({ error: "Failed to get likes" });
+  }
+};
+
+module.exports = { signup, login, logout, novelLiked };
