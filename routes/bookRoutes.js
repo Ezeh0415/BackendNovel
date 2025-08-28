@@ -9,7 +9,7 @@ const authController = require("../controllers/authController");
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
 router.get("/logout", authController.logout);
-router.get("/novelLiked", authController.novelLiked);
+router.get("/novelLiked/:id", authController.novelLiked);
 
 router.get("/books", bookController.getAllBooks);
 router.get("/books/:id", bookController.getBookById);
