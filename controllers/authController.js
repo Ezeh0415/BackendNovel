@@ -129,8 +129,12 @@ const logout = async (req, res) => {
 };
 
 const novelLiked = async (req, res) => {
+  const userId = req.params.id;
   const db = getDB();
   let likesArray = [];
+  if (!ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: "Invalid user ID format" });
+    }
 
   try {
     await db
