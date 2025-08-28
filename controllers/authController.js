@@ -139,7 +139,7 @@ const novelLiked = async (req, res) => {
   try {
     await db
       .collection("users")
-      .find({ _id: new ObjectId(id) }, { projection: { likes: 1, _id: 0 } }) // Only get 'likes', exclude '_id'
+      .find({ _id: new ObjectId(userId) }, { projection: { likes: 1, _id: 0 } }) // Only get 'likes', exclude '_id'
       .forEach((user) => {
         if (user.likes) likesArray.push(...user.likes); // Collect all likes from all users into one array
       });
