@@ -145,3 +145,34 @@ exports.deleteBook = async (req, res) => {
     res.status(500).json({ error: "Failed to delete file" });
   }
 };
+
+exports.deleteLiked = async (req, res) => {
+ const userId = req.params.id;       // user ID
+  const likeIdToRemove = req.body.id;  // ID of the like you want to remove
+  const db = getDB();
+
+  if (!ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: "Invalid user ID format" });
+  }
+
+  if (!likeIdToRemove) {
+    return res.status(400).json({ error: "Missing likeId in request body" });
+  }
+
+  console.log(likeIdToRemove,userId);
+  
+
+  try {
+    const result = await db.collection("users").findOneAndUpdate(
+      { _id: new ObjectId(userId) },
+      { $pull: { likes: { id: likeIdToRemove } } },
+      { returnDocument: "after" }
+    );
+
+
+    res.status(200).json({ message: "Like removed", user: result.value });
+  } catch (err) {
+    console.error("Failed to remove like:", err);
+    res.status(500).json({ error: "Failed to remove like" });
+  }
+};

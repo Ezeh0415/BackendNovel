@@ -18,6 +18,7 @@ router.post("/books/reviews/:id", bookController.addReview);
 router.post("/books/liked/:id", bookController.addLikes);
 router.patch("/books/update/:id", bookController.updateBook);
 router.delete("/books/:id", bookController.deleteBook);
+router.post("/books/like/:id", bookController.deleteLiked);
 
 // Add more routes as needed
 
