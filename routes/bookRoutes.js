@@ -5,21 +5,27 @@ const bookController = require("../controllers/bookController");
 const authController = require("../controllers/authController");
 
 // authController
-
+// post routers on auth sections
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
+// get routers on auth sections
 router.get("/logout", authController.logout);
 router.get("/novelLiked/:id", authController.novelLiked);
-
+// end of authController
+// get for books router
 router.get("/books", bookController.getAllBooks);
 router.get("/books/:id", bookController.getBookById);
+// post for books router
 router.post("/books", bookController.createBook);
 router.post("/books/reviews/:id", bookController.addReview);
 router.post("/books/liked/:id", bookController.addLikes);
-router.patch("/books/update/:id", bookController.updateBook);
-router.delete("/books/:id", bookController.deleteBook);
 router.post("/books/like/:id", bookController.deleteLiked);
-
-// Add more routes as needed
+// router.post("/books/BookByGenre", bookController.getBookByGenre);
+router.post("/books/BookByAuthor", bookController.getBookByAuthor);
+router.post("/books/BookByTitle", bookController.getBookByTitle);
+// patch for books router
+router.patch("/books/update/:id", bookController.updateBook);
+// delete for books router
+router.delete("/books/:id", bookController.deleteBook);
 
 module.exports = router;

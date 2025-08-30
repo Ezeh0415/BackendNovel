@@ -23,6 +23,48 @@ exports.getAllBooks = async (req, res) => {
   }
 };
 
+exports.getBookByTitle = async (req, res) => {
+  const db = getDB();
+  const title = req.body.search;
+  try {
+    const book = await db.collection("books").find({ title: title }).toArray();
+    res.status(200).json({ data: book });
+  } catch (error) {
+    console.error("Failed to get book:", error);
+    res.status(500).json({ error: "Failed to get book" });
+  }
+};
+
+exports.getBookByAuthor = async (req, res) => {
+  const db = getDB();
+  const author = req.body.search;
+  try {
+    const book = await db
+      .collection("books")
+      .find({ author: author })
+      .toArray();
+    res.status(200).json({ data: book });
+  } catch (error) {
+    console.error("Failed to get book:", error);
+    res.status(500).json({ error: "Failed to get book" });
+  }
+};
+
+// exports.getBookByGenre = async (req, res) => {
+//   const db = getDB();
+//   const genre = req.body.search;
+//   try {
+//     const book = await db
+//       .collection("books")
+//       .find({ genres: { $in: genre } })
+//       .toArray();
+//     res.status(200).json({ data: book });
+//   } catch (error) {
+//     console.error("Failed to get book:", error);
+//     res.status(500).json({ error: "Failed to get book" });
+//   }
+// };
+
 exports.getBookById = async (req, res) => {
   const db = getDB();
   const id = req.params.id;
@@ -147,8 +189,8 @@ exports.deleteBook = async (req, res) => {
 };
 
 exports.deleteLiked = async (req, res) => {
- const userId = req.params.id;       // user ID
-  const likeIdToRemove = req.body.id;  // ID of the like you want to remove
+  const userId = req.params.id; // user ID
+  const likeIdToRemove = req.body.id; // ID of the like you want to remove
   const db = getDB();
 
   if (!ObjectId.isValid(userId)) {
@@ -159,16 +201,16 @@ exports.deleteLiked = async (req, res) => {
     return res.status(400).json({ error: "Missing likeId in request body" });
   }
 
-  console.log(likeIdToRemove,userId);
-  
+  console.log(likeIdToRemove, userId);
 
   try {
-    const result = await db.collection("users").findOneAndUpdate(
-      { _id: new ObjectId(userId) },
-      { $pull: { likes: { id: likeIdToRemove } } },
-      { returnDocument: "after" }
-    );
-
+    const result = await db
+      .collection("users")
+      .findOneAndUpdate(
+        { _id: new ObjectId(userId) },
+        { $pull: { likes: { id: likeIdToRemove } } },
+        { returnDocument: "after" }
+      );
 
     res.status(200).json({ message: "Like removed", user: result.value });
   } catch (err) {

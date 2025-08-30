@@ -19,14 +19,14 @@ const handleSubmit = () => {
 };
 // handleSubmit();
 const handlePost = () => {
-  bookId = "68a1094ed6c8c0554b56a570";
-  fetch(`${Base_Url}/books/like/${userId}`, {
+  search = 'psychological'
+  fetch(`${Base_Url}/books/BookByGenre`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      id: bookId,
+     search,
     }),
   })
     .then((response) => response.json())
@@ -38,7 +38,7 @@ const handlePost = () => {
     });
 };
 
-// handlePost();
+handlePost();
 
 const handleDelete = () => {
   fetch(`${Base_Url}/books/liked/68a1094ed6c8c0554b56a570`, {
