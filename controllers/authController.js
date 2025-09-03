@@ -186,4 +186,27 @@ const uploadImage = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, logout, novelLiked, uploadImage };
+const getUserImg = async (req, res) => {
+  const email = req.body.email?.trim();
+  const db = getDB();
+
+  if (!email) {
+    return res.status(400).json({ message: "Please fill all the fields" });
+  }
+
+  try {
+    const user = await db.collection("users").findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ userImage: user.userImage });
+  } catch (err) {
+    console.error("Failed to get user image:", err);
+    res.status(500).json({ error: "Failed to get user image" });
+  }
+
+}
+
+module.exports = { signup, login, logout, novelLiked, uploadImage,getUserImg };

@@ -20,15 +20,15 @@ const handleSubmit = () => {
 // handleSubmit();
 const handlePost = () => {
   const email = "chigozie@gmail.com";
-  const userImage = "https://picsum.photos/200/300";
-  fetch(`${Base_Url}/user/profileImage`, {
+  // const userImage = "https://picsum.photos/200/300";
+  fetch(`${Base_Url}/user/getprofile`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       email,
-      userImage,
+      // userImage,
     }),
   })
     .then((response) => response.json())
