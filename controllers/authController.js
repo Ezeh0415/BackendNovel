@@ -2,7 +2,7 @@ const { getDB } = require("../models/db");
 const bcrypt = require("bcrypt");
 const User = require("../models/auth");
 const generateTokens = require("../utils/generateTokens");
-const { ObjectId } = require("mongodb"); 
+const { ObjectId } = require("mongodb");
 
 const saltRounds = 10;
 
@@ -60,6 +60,7 @@ const signup = async (req, res) => {
         lastName: newUser.lastName,
         email: newUser.email,
         likes: newUser.likes,
+        profileImg: user.userImage,
       },
       accessToken,
     });
@@ -113,6 +114,7 @@ const login = async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         likes: user.likes,
+        profileImg: user.userImage,
       },
 
       accessToken,
@@ -134,8 +136,8 @@ const novelLiked = async (req, res) => {
   const db = getDB();
   let likesArray = [];
   if (!ObjectId.isValid(userId)) {
-      return res.status(400).json({ error: "Invalid user ID format" });
-    }
+    return res.status(400).json({ error: "Invalid user ID format" });
+  }
 
   try {
     await db
@@ -152,4 +154,36 @@ const novelLiked = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, logout, novelLiked };
+const uploadImage = async (req, res) => {
+  const email = req.body.email?.trim();
+  const userImage = req.body.userImage?.trim();
+  const db = getDB();
+
+  if (!email || !userImage) {
+    return res.status(400).json({ message: "Please fill all the fields" });
+  }
+
+  try {
+    const user = await db.collection("users").findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.userImage === userImage) {
+      return res.status(200).json({ message: "This image is already set as your profile picture" });
+    }
+
+    const result = await db.collection("users").updateOne(
+      { email },
+      { $set: { userImage } }
+    );
+
+    res.status(200).json({ message: "Profile image updated successfully" });
+  } catch (err) {
+    console.error("Failed to update user image:", err);
+    res.status(500).json({ error: "Failed to update user image" });
+  }
+};
+
+module.exports = { signup, login, logout, novelLiked, uploadImage };

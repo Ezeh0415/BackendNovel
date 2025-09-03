@@ -19,14 +19,16 @@ const handleSubmit = () => {
 };
 // handleSubmit();
 const handlePost = () => {
-  const UserName = "chigozie";
-  fetch(`${Base_Url}/books/review/count`, {
+  const email = "chigozie@gmail.com";
+  const userImage = "https://picsum.photos/200/300";
+  fetch(`${Base_Url}/user/profileImage`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      UserName,
+      email,
+      userImage,
     }),
   })
     .then((response) => response.json())
@@ -38,7 +40,7 @@ const handlePost = () => {
     });
 };
 
-// handlePost();
+handlePost();
 
 const handleDelete = () => {
   fetch(`${Base_Url}/books/liked/68a1094ed6c8c0554b56a570`, {
