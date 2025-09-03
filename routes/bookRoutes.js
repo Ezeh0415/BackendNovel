@@ -18,6 +18,7 @@ router.get("/books/:id", bookController.getBookById);
 // post for books router
 router.post("/books", bookController.createBook);
 router.post("/books/reviews/:id", bookController.addReview);
+router.post("/books/review/count", bookController.totalReview);
 router.post("/books/liked/:id", bookController.addLikes);
 router.post("/books/like/:id", bookController.deleteLiked);
 // router.post("/books/BookByGenre", bookController.getBookByGenre);

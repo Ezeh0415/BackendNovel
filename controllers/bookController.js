@@ -50,20 +50,32 @@ exports.getBookByAuthor = async (req, res) => {
   }
 };
 
-// exports.getBookByGenre = async (req, res) => {
-//   const db = getDB();
-//   const genre = req.body.search;
-//   try {
-//     const book = await db
-//       .collection("books")
-//       .find({ genres: { $in: genre } })
-//       .toArray();
-//     res.status(200).json({ data: book });
-//   } catch (error) {
-//     console.error("Failed to get book:", error);
-//     res.status(500).json({ error: "Failed to get book" });
-//   }
-// };
+exports.totalReview = async (req, res) => {
+  try {
+    const db = getDB(); // your database connection
+    const reviewerName = req.body.UserName;
+
+    if (!reviewerName) {
+      return res.status(400).json({ error: "Reviewer name is required" });
+    }
+
+    const result = await db
+      .collection("books")
+      .aggregate([
+        { $unwind: "$reviews" },
+        { $match: { "reviews.reviewer": reviewerName } },
+        { $count: "totalReviews" },
+      ])
+      .toArray();
+
+    const total = result[0]?.totalReviews || 0;
+
+    res.status(200).json({ name: reviewerName, totalReviews: total });
+  } catch (err) {
+    console.error("Error fetching total reviews:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 exports.getBookById = async (req, res) => {
   const db = getDB();

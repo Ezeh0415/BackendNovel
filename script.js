@@ -19,14 +19,14 @@ const handleSubmit = () => {
 };
 // handleSubmit();
 const handlePost = () => {
-  search = 'psychological'
-  fetch(`${Base_Url}/books/BookByGenre`, {
+  const UserName = "chigozie";
+  fetch(`${Base_Url}/books/review/count`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-     search,
+      UserName,
     }),
   })
     .then((response) => response.json())
@@ -38,7 +38,7 @@ const handlePost = () => {
     });
 };
 
-handlePost();
+// handlePost();
 
 const handleDelete = () => {
   fetch(`${Base_Url}/books/liked/68a1094ed6c8c0554b56a570`, {
