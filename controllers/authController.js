@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const User = require("../models/auth");
 const generateTokens = require("../utils/generateTokens");
 const { ObjectId } = require("mongodb");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 const saltRounds = 10;
 
@@ -23,6 +25,17 @@ const signup = async (req, res) => {
       return res.status(409).json({ message: "User already exists" });
     }
 
+    function generateNumericOTP(length = 6) {
+      let otp = "";
+      for (let i = 0; i < length; i++) {
+        otp += crypto.randomInt(0, 10); // 0-9
+      }
+      return otp;
+    }
+
+    // Example usage
+    const otp = generateNumericOTP(); // e.g., "482739"
+
     // Hash the password
     const hash = await bcrypt.hash(password, saltRounds);
 
@@ -32,6 +45,31 @@ const signup = async (req, res) => {
       lastName,
       email,
       password: hash,
+      otp: otp,
+    });
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: `NovelHub Account Verification Code`,
+      html: `
+    <p>Dear User,</p>
+    <p>Your verification code is:</p>
+    <h2 style="color:#2c3e50;">${otp}</h2>
+    <p>Please enter this code within 10 minutes to verify your account.</p>
+    <p>If you did not request this, please disregard this email.</p>
+    <br/>
+    <p>Thank you for choosing <strong>NovelHub</strong>.</p>
+  `,
+      text: `${otp} is your verification code.`,
     });
 
     const newUser = result.ops
@@ -60,8 +98,10 @@ const signup = async (req, res) => {
         lastName: newUser.lastName,
         email: newUser.email,
         likes: newUser.likes,
-        profileImg: user.userImage,
-        subscribed: user.subscribed,
+        profileImg: newUser.userImage,
+        subscribed: newUser.subscribed,
+        otp: newUser.otp,
+        messageId: info.messageId,
       },
       accessToken,
     });
@@ -132,6 +172,11 @@ const logout = async (req, res) => {
   res.clearCookie("refreshToken", { httpOnly: true, sameSite: "Strict" });
   res.status(200).json({ message: "Logged out successfully" });
 };
+
+// const userotp = async (req,res) => {
+//   const email = req.body.email?.trim();
+//   const db = getDB();
+// }
 
 const novelLiked = async (req, res) => {
   const userId = req.params.id;
