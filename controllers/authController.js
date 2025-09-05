@@ -173,13 +173,14 @@ const uploadImage = async (req, res) => {
     }
 
     if (user.userImage === userImage) {
-      return res.status(200).json({ message: "This image is already set as your profile picture" });
+      return res
+        .status(200)
+        .json({ message: "This image is already set as your profile picture" });
     }
 
-    const result = await db.collection("users").updateOne(
-      { email },
-      { $set: { userImage } }
-    );
+    const result = await db
+      .collection("users")
+      .updateOne({ email }, { $set: { userImage } });
 
     res.status(200).json({ message: "Profile image updated successfully" });
   } catch (err) {
@@ -192,28 +193,29 @@ const subscribe = async (req, res) => {
   const email = req.body.email?.trim();
   const db = getDB();
 
-  if(!email) {
+  if (!email) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
-  
+
   try {
     const user = await db.collection("users").findOne({ email });
 
-    if ( !user ) {
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const result = await db.collection("users").updateOne(
-      { email },
-      { $set: { subscribed: !user.subscribed } }
-    );
+    const result = await db
+      .collection("users")
+      .updateOne({ email }, { $set: { subscribed: !user.subscribed } });
 
-    res.status(200).json({ message: "Subscription updated successfully" , result:result});
+    res
+      .status(200)
+      .json({ message: "Subscription updated successfully", result: result });
   } catch (err) {
     console.error("Failed to update user image:", err);
     res.status(500).json({ error: "Failed to update user image" });
-  } 
-}
+  }
+};
 
 const getUserImg = async (req, res) => {
   const email = req.body.email?.trim();
@@ -235,7 +237,43 @@ const getUserImg = async (req, res) => {
     console.error("Failed to get user image:", err);
     res.status(500).json({ error: "Failed to get user image" });
   }
+};
 
-}
+const deleteUser = async (req, res) => {
+  const userId = req.params.id; // user ID
+  const userEmail = req.body.email; // ID of the like you want to remove
+  const db = getDB();
 
-module.exports = { signup, login, logout, novelLiked, uploadImage,getUserImg,subscribe };
+  if (!ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: "Invalid user ID format" });
+  }
+
+  if (!userEmail) {
+    return res.status(400).json({ error: "email not found " });
+  }
+
+  console.log(userEmail, userId);
+
+  try {
+    const result = await db.collection("users").findOneAndDelete({
+      _id: new ObjectId(userId),
+      email: userEmail,
+    });
+
+    res.status(200).json({ message: "user deleted", user: result.value });
+  } catch (err) {
+    console.error("Failed to remove like:", err);
+    res.status(500).json({ error: "Failed to remove like" });
+  }
+};
+
+module.exports = {
+  signup,
+  login,
+  logout,
+  novelLiked,
+  uploadImage,
+  getUserImg,
+  subscribe,
+  deleteUser,
+};
