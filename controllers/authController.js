@@ -240,8 +240,8 @@ const getUserImg = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
-  const userId = req.params.id; // user ID
-  const userEmail = req.body.email; // ID of the like you want to remove
+  const userId = req.body.id; // user ID of the user you want to remove
+  const userEmail = req.body.email; // email of the user you want to remove
   const db = getDB();
 
   if (!ObjectId.isValid(userId)) {
@@ -249,7 +249,7 @@ const deleteUser = async (req, res) => {
   }
 
   if (!userEmail) {
-    return res.status(400).json({ error: "email not found " });
+    return res.status(400).json({ error: "user email not found " });
   }
 
   console.log(userEmail, userId);
@@ -262,8 +262,8 @@ const deleteUser = async (req, res) => {
 
     res.status(200).json({ message: "user deleted", user: result.value });
   } catch (err) {
-    console.error("Failed to remove like:", err);
-    res.status(500).json({ error: "Failed to remove like" });
+    console.error("Failed to delete user:", err);
+    res.status(500).json({ error: "Failed to delete user" });
   }
 };
 
