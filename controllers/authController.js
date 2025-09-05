@@ -40,12 +40,15 @@ const signup = async (req, res) => {
     const hash = await bcrypt.hash(password, saltRounds);
 
     // Create the user
+    const now = new Date();
+
     const result = await db.collection("users").insertOne({
       firstName,
       lastName,
       email,
       password: hash,
-      otp: otp,
+      otp,
+      otpCreatedAt: now,
     });
 
     const transporter = nodemailer.createTransport({
@@ -72,14 +75,14 @@ const signup = async (req, res) => {
       text: `${otp} is your verification code.`,
     });
 
-    const newUser = result.ops
-      ? result.ops[0]
-      : await db.collection("users").findOne({ _id: result.insertedId });
+    const newUser = await db
+      .collection("users")
+      .findOne({ _id: result.insertedId });
 
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens({
-      id: user._id,
-      firstName: user.firstName,
+      id: newUser._id,
+      firstName: newUser.firstName,
     });
 
     // Set refresh token in HTTP-only cookie
@@ -100,7 +103,7 @@ const signup = async (req, res) => {
         likes: newUser.likes,
         profileImg: newUser.userImage,
         subscribed: newUser.subscribed,
-        otp: newUser.otp,
+        // otp: newUser.otp,
         messageId: info.messageId,
       },
       accessToken,
