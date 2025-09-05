@@ -21,7 +21,7 @@ const handleSubmit = () => {
 const handlePost = () => {
   const email = "chigozie@gmail.com";
   // const userImage = "https://picsum.photos/200/300";
-  fetch(`${Base_Url}/user/getprofile`, {
+  fetch(`${Base_Url}/user/subscribe`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -40,7 +40,7 @@ const handlePost = () => {
     });
 };
 
-handlePost();
+// handlePost();
 
 const handleDelete = () => {
   fetch(`${Base_Url}/books/liked/68a1094ed6c8c0554b56a570`, {

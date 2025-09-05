@@ -61,6 +61,7 @@ const signup = async (req, res) => {
         email: newUser.email,
         likes: newUser.likes,
         profileImg: user.userImage,
+        subscribed: user.subscribed,
       },
       accessToken,
     });
@@ -115,6 +116,7 @@ const login = async (req, res) => {
         email: user.email,
         likes: user.likes,
         profileImg: user.userImage,
+        subscribed: user.subscribed,
       },
 
       accessToken,
@@ -186,6 +188,33 @@ const uploadImage = async (req, res) => {
   }
 };
 
+const subscribe = async (req, res) => {
+  const email = req.body.email?.trim();
+  const db = getDB();
+
+  if(!email) {
+    return res.status(400).json({ message: "Please fill all the fields" });
+  }
+  
+  try {
+    const user = await db.collection("users").findOne({ email });
+
+    if ( !user ) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const result = await db.collection("users").updateOne(
+      { email },
+      { $set: { subscribed: !user.subscribed } }
+    );
+
+    res.status(200).json({ message: "Subscription updated successfully" , result:result});
+  } catch (err) {
+    console.error("Failed to update user image:", err);
+    res.status(500).json({ error: "Failed to update user image" });
+  } 
+}
+
 const getUserImg = async (req, res) => {
   const email = req.body.email?.trim();
   const db = getDB();
@@ -209,4 +238,4 @@ const getUserImg = async (req, res) => {
 
 }
 
-module.exports = { signup, login, logout, novelLiked, uploadImage,getUserImg };
+module.exports = { signup, login, logout, novelLiked, uploadImage,getUserImg,subscribe };
