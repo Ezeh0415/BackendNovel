@@ -1,6 +1,6 @@
 // const nodemailer = require("nodemailer");
 // const sendgridTransport = require("nodemailer-sendgrid");
-import { Resend } from "resend";
+const { Resend } = require("resend");
 
 // function getTransporter() {
 //   return nodemailer.createTransport(
@@ -12,12 +12,12 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 async function sendOtpEmail(email, otp) {
- try {
-  const {data,error} = await resend.emails.send({
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: `NovelHub Account Verification Code`,
-    html: `
+  try {
+    const { data, error } = await resend.emails.send({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: `NovelHub Account Verification Code`,
+      html: `
       <p>Dear User,</p>
       <p>Your verification code is:</p>
       <h2 style="color:#2c3e50;">${otp}</h2>
@@ -26,16 +26,15 @@ async function sendOtpEmail(email, otp) {
       <br/>
       <p>Thank you for choosing <strong>NovelHub</strong>.</p>
     `,
-  });
-   if (error) {
-      console.error('❌ Failed to send email:', error);
+    });
+    if (error) {
+      console.error("❌ Failed to send email:", error);
     } else {
-      console.log('✅ Email sent:', data);
+      console.log("✅ Email sent:", data);
     }
   } catch (err) {
-    console.error('❌ Error:', err);
+    console.error("❌ Error:", err);
   }
-  
 }
 
 module.exports = { sendOtpEmail };
