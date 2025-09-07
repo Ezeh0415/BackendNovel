@@ -12,6 +12,8 @@ router.post("/user/profileImage", authController.uploadImage);
 router.post("/user/getprofile", authController.getUserImg);
 router.post("/user/subscribe", authController.subscribe);
 router.post("/user/deleteUser", authController.deleteUser);
+router.post("/user/otpSend", authController.otpHandler);
+router.post("/user/otpreset", authController.otpReset);
 // get routers on auth sections
 router.get("/logout", authController.logout);
 router.get("/novelLiked/:id", authController.novelLiked);

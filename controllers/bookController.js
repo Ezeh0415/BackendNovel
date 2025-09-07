@@ -2,9 +2,7 @@
 const { ObjectId } = require("mongodb");
 const { getDB } = require("../models/db");
 const Novels = require("../models/Novel");
-// const crypto = require("crypto");
-
-// const secretKey = crypto.randomBytes(64).toString("hex");
+const { handleError } = require("../utils/ErrorHandler");
 
 exports.getAllBooks = async (req, res) => {
   try {
@@ -18,8 +16,7 @@ exports.getAllBooks = async (req, res) => {
     console.log("Book:");
     res.status(200).json({ count: bookCount, data: books });
   } catch (error) {
-    console.error("Failed to get books:", error);
-    res.status(500).json({ error: "Failed to get books" });
+    handleError(res, err, "Failed to get books");
   }
 };
 
@@ -30,8 +27,7 @@ exports.getBookByTitle = async (req, res) => {
     const book = await db.collection("books").find({ title: title }).toArray();
     res.status(200).json({ data: book });
   } catch (error) {
-    console.error("Failed to get book:", error);
-    res.status(500).json({ error: "Failed to get book" });
+    handleError(res, err, "Failed to get books");
   }
 };
 
@@ -45,8 +41,7 @@ exports.getBookByAuthor = async (req, res) => {
       .toArray();
     res.status(200).json({ data: book });
   } catch (error) {
-    console.error("Failed to get book:", error);
-    res.status(500).json({ error: "Failed to get book" });
+    handleError(res, err, "Failed to get books");
   }
 };
 
@@ -72,8 +67,7 @@ exports.totalReview = async (req, res) => {
 
     res.status(200).json({ name: reviewerName, totalReviews: total });
   } catch (err) {
-    console.error("Error fetching total reviews:", err);
-    res.status(500).json({ error: "Internal server error" });
+    handleError(res, err, "Error fetching total reviews:");
   }
 };
 
@@ -89,8 +83,7 @@ exports.getBookById = async (req, res) => {
       .findOne({ _id: new ObjectId(id) });
     res.status(200).json({ data: book });
   } catch (error) {
-    console.error("Failed to get book:", error);
-    res.status(500).json({ error: "Failed to get book" });
+    handleError(res, err, "Failed to get books");
   }
 };
 
@@ -102,8 +95,7 @@ exports.createBook = async (req, res) => {
     const result = await db.collection("books").insertOne(book);
     res.status(200).json(result);
   } catch (error) {
-    console.error("Failed to create file:", error);
-    res.status(500).json({ error: "Failed to create file" });
+    handleError(res, err, "Failed to create file");
   }
 };
 
@@ -123,8 +115,7 @@ exports.addReview = async (req, res) => {
     }
     res.status(200).json({ message: "Review added successfully" });
   } catch (error) {
-    console.error("Failed to add review:", error);
-    res.status(500).json({ error: "Failed to add review" });
+    handleError(res, err, "Failed to add review");
   }
 };
 
@@ -154,8 +145,7 @@ exports.addLikes = async (req, res) => {
 
     res.status(200).json({ message: "Like added successfully" });
   } catch (error) {
-    console.error("Failed to add like:", error);
-    res.status(500).json({ error: "Failed to add like" });
+    handleError(res, err, "Failed to add likes");
   }
 };
 
@@ -175,8 +165,7 @@ exports.updateBook = async (req, res) => {
     }
     res.status(200).json(result);
   } catch (error) {
-    console.error("Failed to update file:", error);
-    res.status(500).json({ error: "Failed to update file" });
+    handleError(res, err, "Failed to update book");
   }
 };
 
@@ -195,8 +184,7 @@ exports.deleteBook = async (req, res) => {
     }
     res.status(200).json(result);
   } catch (error) {
-    console.error("Failed to delete file:", error);
-    res.status(500).json({ error: "Failed to delete file" });
+    handleError(res, err, "unable to delete book");
   }
 };
 
@@ -226,7 +214,6 @@ exports.deleteLiked = async (req, res) => {
 
     res.status(200).json({ message: "Like removed", user: result.value });
   } catch (err) {
-    console.error("Failed to remove like:", err);
-    res.status(500).json({ error: "Failed to remove like" });
+    handleError(res, err, "unable to unlike the book");
   }
 };

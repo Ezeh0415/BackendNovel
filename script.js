@@ -19,16 +19,23 @@ const handleSubmit = () => {
 };
 // handleSubmit();
 const handlePost = () => {
-  const email = "chigozie@gmail.com";
+  const firstName = "Ezeanwe";
+  const lastName = "Chigozie";
+  const password = "chigozie3942";
+  const email = "ezeanwechigozie@gmail.com";
+  const otp = "252813";
   // const userImage = "https://picsum.photos/200/300";
-  fetch(`${Base_Url}/user/subscribe`, {
+  fetch(`${Base_Url}/user/otpSend`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      // firstName,
+      // lastName,
+      // password,
       email,
-      // userImage,
+      otp,
     }),
   })
     .then((response) => response.json())

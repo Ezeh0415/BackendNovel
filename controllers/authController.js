@@ -1,45 +1,80 @@
 const { getDB } = require("../models/db");
 const bcrypt = require("bcrypt");
-const User = require("../models/auth");
 const generateTokens = require("../utils/generateTokens");
 const { ObjectId } = require("mongodb");
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+const { sendOtpEmail } = require("../utils/mailer");
+const generateNumericOTP = require("../utils/otp");
+const { handleError } = require("../utils/ErrorHandler");
 
 const saltRounds = 10;
 
-const signup = async (req, res) => {
-  const user = new User(req.body);
-  const { firstName, lastName, email, password } = user;
+// Utility: Centralized error handler
+// function handleError(res, error, message = "Server error", status = 500) {
+//   console.error(message, error);
+//   return res.status(status).json({ message, error: error?.message });
+// }
 
+// Utility: OTP generator
+// function generateNumericOTP(length = 6) {
+//   let otp = "";
+//   for (let i = 0; i < length; i++) {
+//     otp += crypto.randomInt(0, 10);
+//   }
+//   return otp;
+// }
+
+// Utility: Nodemailer transporter
+// function getTransporter() {
+//   return nodemailer.createTransport({
+//     host: "smtp.gmail.com",
+//     port: 587,
+//     secure: false, // OK for port 587 (uses STARTTLS)
+//     auth: {
+//       user: process.env.EMAIL_USER,
+//       pass: process.env.EMAIL_PASS,
+//     },
+//     tls: {
+//       rejectUnauthorized: false,
+//     },
+//   });
+// }
+
+// // Utility: Send OTP email
+// async function sendOtpEmail(email, otp) {
+//   const transporter = getTransporter();
+//   await transporter.verify();
+//   return transporter.sendMail({
+//     from: process.env.EMAIL_USER,
+//     to: email,
+//     subject: `NovelHub Account Verification Code`,
+//     html: `
+//       <p>Dear User,</p>
+//       <p>Your verification code is:</p>
+//       <h2 style="color:#2c3e50;">${otp}</h2>
+//       <p>Please enter this code within 10 minutes to verify your account.</p>
+//       <p>If you did not request this, please disregard this email.</p>
+//       <br/>
+//       <p>Thank you for choosing <strong>NovelHub</strong>.</p>
+//     `,
+//     text: `${otp} is your verification code.`,
+//   });
+// }
+
+// Signup Controller
+const signup = async (req, res) => {
+  const { firstName, lastName, email, password } = req.body;
   if (!firstName || !lastName || !email || !password) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
-
   try {
     const db = getDB();
-
-    // Check for existing user
     const existingUser = await db.collection("users").findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: "User already exists" });
     }
-
-    function generateNumericOTP(length = 6) {
-      let otp = "";
-      for (let i = 0; i < length; i++) {
-        otp += crypto.randomInt(0, 10); // 0-9
-      }
-      return otp;
-    }
-
-    // Example usage
-    const otp = generateNumericOTP(); // e.g., "482739"
-
-    // Hash the password
+    const otp = generateNumericOTP();
     const hash = await bcrypt.hash(password, saltRounds);
-
-    // Create the user
+    const otpHash = await bcrypt.hash(otp, saltRounds);
     const now = new Date();
 
     const result = await db.collection("users").insertOne({
@@ -47,53 +82,27 @@ const signup = async (req, res) => {
       lastName,
       email,
       password: hash,
-      otp,
+      otp: otpHash,
       otpCreatedAt: now,
+      isVerified: false,
+      likes: [],
+      subscribed: false,
+      userImage: "",
     });
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: `NovelHub Account Verification Code`,
-      html: `
-    <p>Dear User,</p>
-    <p>Your verification code is:</p>
-    <h2 style="color:#2c3e50;">${otp}</h2>
-    <p>Please enter this code within 10 minutes to verify your account.</p>
-    <p>If you did not request this, please disregard this email.</p>
-    <br/>
-    <p>Thank you for choosing <strong>NovelHub</strong>.</p>
-  `,
-      text: `${otp} is your verification code.`,
-    });
-
-    const newUser = await db
-      .collection("users")
-      .findOne({ _id: result.insertedId });
-
-    // Generate tokens
+    const newUser = await db.collection("users").findOne({ _id: result.insertedId });
     const { accessToken, refreshToken } = generateTokens({
       id: newUser._id,
       firstName: newUser.firstName,
     });
 
-    // Set refresh token in HTTP-only cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "Strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Respond with user data (excluding password) + access token
     res.status(201).json({
       user: {
         id: newUser._id,
@@ -103,54 +112,101 @@ const signup = async (req, res) => {
         likes: newUser.likes,
         profileImg: newUser.userImage,
         subscribed: newUser.subscribed,
-        // otp: newUser.otp,
-        messageId: info.messageId,
       },
       accessToken,
     });
+
+    // Send OTP email (do not block response)
+    sendOtpEmail(email, otp).catch((error) =>
+      console.error("Error sending email:", error)
+    );
   } catch (err) {
-    console.error("Signup error:", err); // log full error for devs/admins
-    res.status(500).json({ message: "Server error" });
+    handleError(res, err, "Signup error");
   }
 };
 
+// OTP Verification Controller
+const otpHandler = async (req, res) => {
+  const { email, otp: providedOtp } = req.body;
+  if (!providedOtp || !email) {
+    return res.status(400).json({ message: "Please fill all the fields" });
+  }
+  try {
+    const db = getDB();
+    const user = await db.collection("users").findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user.otp) return res.status(400).json({ message: "No OTP found for this user" });
+
+    const isOtpValid = await bcrypt.compare(providedOtp, user.otp);
+    if (!isOtpValid) return res.status(401).json({ message: "Invalid OTP" });
+
+    const now = new Date();
+    const otpCreatedAt = new Date(user.otpCreatedAt);
+    if (otpCreatedAt < new Date(now.getTime() - 10 * 60 * 1000)) {
+      return res.status(401).json({ message: "OTP has expired" });
+    }
+
+    await db.collection("users").updateOne(
+      { email },
+      { $set: { isVerified: true }, $unset: { otp: "", otpCreatedAt: "" } }
+    );
+    return res.status(200).json({ message: "OTP verified successfully" });
+  } catch (err) {
+    handleError(res, err, "OTP verification error");
+  }
+};
+
+// OTP Reset Controller
+const otpReset = async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(401).json({ message: "invalid credentials" });
+  try {
+    const db = getDB();
+    const user = await db.collection("users").findOne({ email });
+    if (!user) return res.status(404).json({ message: "user not found" });
+
+    const otp = generateNumericOTP();
+    const otpHash = await bcrypt.hash(otp, saltRounds);
+    await db.collection("users").updateOne(
+      { email },
+      { $set: { isVerified: false, otp: otpHash, otpCreatedAt: new Date() } }
+    );
+
+    sendOtpEmail(email, otp).catch((error) =>
+      console.error("Error sending email:", error)
+    );
+    return res.status(200).json({ message: "OTP resent successfully" });
+  } catch (err) {
+    handleError(res, err, "ERROR RESENDING OTP");
+  }
+};
+
+// Login Controller
 const login = async (req, res) => {
   const { email, password } = req.body;
-
   if (!email || !password) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
-
   try {
     const db = getDB();
-
-    // Find the user by email
     const user = await db.collection("users").findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-    // Compare the provided password with the hashed password
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+    if (!isPasswordValid) return res.status(401).json({ message: "Invalid credentials" });
 
-    // Generate tokens
     const { accessToken, refreshToken } = generateTokens({
       id: user._id,
       email: user.email,
     });
 
-    // Set refresh token in HTTP-only cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "Strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Respond with user data (excluding password) + access token
     res.status(200).json({
       user: {
         id: user._id,
@@ -161,157 +217,113 @@ const login = async (req, res) => {
         profileImg: user.userImage,
         subscribed: user.subscribed,
       },
-
       accessToken,
     });
-    console.log("successfully logged in");
   } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    handleError(res, err, "Login error");
   }
 };
 
+// Logout Controller
 const logout = async (req, res) => {
   res.clearCookie("refreshToken", { httpOnly: true, sameSite: "Strict" });
   res.status(200).json({ message: "Logged out successfully" });
 };
 
-// const userotp = async (req,res) => {
-//   const email = req.body.email?.trim();
-//   const db = getDB();
-// }
-
+// Get User's Liked Novels
 const novelLiked = async (req, res) => {
   const userId = req.params.id;
-  const db = getDB();
-  let likesArray = [];
   if (!ObjectId.isValid(userId)) {
     return res.status(400).json({ error: "Invalid user ID format" });
   }
-
   try {
-    await db
-      .collection("users")
-      .find({ _id: new ObjectId(userId) }, { projection: { likes: 1, _id: 0 } }) // Only get 'likes', exclude '_id'
-      .forEach((user) => {
-        if (user.likes) likesArray.push(...user.likes); // Collect all likes from all users into one array
-      });
-
-    res.status(200).json({ data: likesArray });
+    const db = getDB();
+    const user = await db.collection("users").findOne(
+      { _id: new ObjectId(userId) },
+      { projection: { likes: 1, _id: 0 } }
+    );
+    res.status(200).json({ data: user?.likes || [] });
   } catch (err) {
-    console.error("Failed to get likes:", err);
-    res.status(500).json({ error: "Failed to get likes" });
+    handleError(res, err, "Failed to get likes");
   }
 };
 
+// Upload Profile Image
 const uploadImage = async (req, res) => {
   const email = req.body.email?.trim();
   const userImage = req.body.userImage?.trim();
-  const db = getDB();
-
   if (!email || !userImage) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
-
   try {
+    const db = getDB();
     const user = await db.collection("users").findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
+    if (!user) return res.status(404).json({ message: "User not found" });
     if (user.userImage === userImage) {
-      return res
-        .status(200)
-        .json({ message: "This image is already set as your profile picture" });
+      return res.status(200).json({ message: "This image is already set as your profile picture" });
     }
-
-    const result = await db
-      .collection("users")
-      .updateOne({ email }, { $set: { userImage } });
-
+    await db.collection("users").updateOne({ email }, { $set: { userImage } });
     res.status(200).json({ message: "Profile image updated successfully" });
   } catch (err) {
-    console.error("Failed to update user image:", err);
-    res.status(500).json({ error: "Failed to update user image" });
+    handleError(res, err, "Failed to update user image");
   }
 };
 
+// Toggle Subscription
 const subscribe = async (req, res) => {
   const email = req.body.email?.trim();
-  const db = getDB();
-
   if (!email) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
-
   try {
+    const db = getDB();
     const user = await db.collection("users").findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const result = await db
-      .collection("users")
-      .updateOne({ email }, { $set: { subscribed: !user.subscribed } });
-
-    res
-      .status(200)
-      .json({ message: "Subscription updated successfully", result: result });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    const result = await db.collection("users").updateOne(
+      { email },
+      { $set: { subscribed: !user.subscribed } }
+    );
+    res.status(200).json({ message: "Subscription updated successfully", result });
   } catch (err) {
-    console.error("Failed to update user image:", err);
-    res.status(500).json({ error: "Failed to update user image" });
+    handleError(res, err, "Failed to update subscription");
   }
 };
 
+// Get User Image
 const getUserImg = async (req, res) => {
   const email = req.body.email?.trim();
-  const db = getDB();
-
   if (!email) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
-
   try {
+    const db = getDB();
     const user = await db.collection("users").findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
+    if (!user) return res.status(404).json({ message: "User not found" });
     res.status(200).json({ userImage: user.userImage });
   } catch (err) {
-    console.error("Failed to get user image:", err);
-    res.status(500).json({ error: "Failed to get user image" });
+    handleError(res, err, "Failed to get user image");
   }
 };
 
+// Delete User
 const deleteUser = async (req, res) => {
-  const userId = req.body.id; // user ID of the user you want to remove
-  const userEmail = req.body.email; // email of the user you want to remove
-  const db = getDB();
-
+  const userId = req.body.id;
+  const userEmail = req.body.email;
   if (!ObjectId.isValid(userId)) {
     return res.status(400).json({ error: "Invalid user ID format" });
   }
-
   if (!userEmail) {
-    return res.status(400).json({ error: "user email not found " });
+    return res.status(400).json({ error: "user email not found" });
   }
-
-  console.log(userEmail, userId);
-
   try {
+    const db = getDB();
     const result = await db.collection("users").findOneAndDelete({
       _id: new ObjectId(userId),
       email: userEmail,
     });
-
     res.status(200).json({ message: "user deleted", user: result.value });
   } catch (err) {
-    console.error("Failed to delete user:", err);
-    res.status(500).json({ error: "Failed to delete user" });
+    handleError(res, err, "Failed to delete user");
   }
 };
 
@@ -324,4 +336,6 @@ module.exports = {
   getUserImg,
   subscribe,
   deleteUser,
+  otpHandler,
+  otpReset,
 };
