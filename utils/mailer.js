@@ -1,5 +1,6 @@
 // const nodemailer = require("nodemailer");
 // const sendgridTransport = require("nodemailer-sendgrid");
+require("dotenv").config();
 const { Resend } = require("resend");
 
 // function getTransporter() {
@@ -11,6 +12,7 @@ const { Resend } = require("resend");
 // }
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+console.log("Resend API Key:", process.env.RESEND_API_KEY);
 async function sendOtpEmail(email, otp) {
   try {
     const { data, error } = await resend.emails.send({
