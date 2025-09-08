@@ -112,6 +112,7 @@ const signup = async (req, res) => {
         likes: newUser.likes,
         profileImg: newUser.userImage,
         subscribed: newUser.subscribed,
+        isVerified: newUser.isVerified,
       },
       accessToken,
     });
