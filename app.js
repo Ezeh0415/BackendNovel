@@ -4,7 +4,6 @@ const { connectDB } = require("./models/db");
 const cors = require("cors");
 const bookRoutes = require("./routes/bookRoutes");
 
-
 // init and middleware
 const app = express();
 app.use(express.json());
@@ -22,8 +21,9 @@ connectDB()
 
 app.use(
   cors({
-    origin: "*", // Replace with your frontend URL for security in production
+    origin: "http://localhost:3000", // ✅ Your frontend URL
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true, // ✅ Allow cookies/auth headers
   })
 );
 
