@@ -19,11 +19,26 @@ connectDB()
     console.error("Failed to connect to DB:", err);
   });
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://front-end-novel-oi5s.vercel.app/",
+  "https://front-end-novel.vercel.app/",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:3000", // ✅ Your frontend URL
+    origin: function (origin, callback) {
+      // Allow requests with no origin like mobile apps or curl
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true, // ✅ Allow cookies/auth headers
+    credentials: true,
   })
 );
 
