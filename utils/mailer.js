@@ -22,7 +22,7 @@ async function sendOtpEmail(email, otp) {
       <p>Dear User,</p>
       <p>Your verification code is:</p>
       <h2 style="color:#2c3e50;">${otp}</h2>
-      <p>Please enter this code within 10 minutes to verify your account.</p>
+      <p>Please enter this code within 5 minutes to verify your account.</p>
       <p>If you did not request this, please disregard this email.</p>
       <br/>
       <p>Thank you for choosing <strong>NovelHub</strong>.</p>

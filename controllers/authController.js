@@ -142,7 +142,7 @@ const otpHandler = async (req, res) => {
 
     const now = new Date();
     const otpCreatedAt = new Date(user.otpCreatedAt);
-    if (otpCreatedAt < new Date(now.getTime() - 10 * 60 * 1000)) {
+    if (otpCreatedAt < new Date(now.getTime() - 5 * 60 * 1000)) {
       return res.status(401).json({ message: "OTP has expired" });
     }
 
