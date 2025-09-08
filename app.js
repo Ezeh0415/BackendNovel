@@ -21,8 +21,8 @@ connectDB()
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://front-end-novel-oi5s.vercel.app/",
-  "https://front-end-novel.vercel.app/",
+  "https://front-end-novel-oi5s.vercel.app",
+  "https://front-end-novel.vercel.app",
 ];
 
 app.use(
