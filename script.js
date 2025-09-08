@@ -8,7 +8,7 @@ const Base_Url = "http://localhost:8080";
 const userId = "68aff015c7d0934b36cd2ac5";
 
 const handleSubmit = () => {
-  fetch(`${Base_Url}/novelLiked/${userId}`)
+  fetch(`${Base_Url}/books?page=2`)
     .then((response) => response.json())
     .then((data) => {
       console.log(data);

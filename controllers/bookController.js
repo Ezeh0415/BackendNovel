@@ -7,18 +7,37 @@ const { handleError } = require("../utils/ErrorHandler");
 exports.getAllBooks = async (req, res) => {
   try {
     const db = getDB();
-    const bookCount = await db.collection("books").find().count();
+
+    // Get query params and convert to numbers
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
+
+    const skip = (page - 1) * limit;
+
+    // Get total count of books
+    const bookCount = await db.collection("books").countDocuments();
+
+    // Get paginated books
     const books = await db
       .collection("books")
       .find()
       .sort({ title: 1 })
+      .skip(skip)
+      .limit(limit)
       .toArray();
-    console.log("Book:");
-    res.status(200).json({ count: bookCount, data: books });
-  } catch (error) {
+
+    res.status(200).json({
+      page,
+      limit,
+      totalItems: bookCount,
+      totalPages: Math.ceil(bookCount / limit),
+      data: books,
+    });
+  } catch (err) {
     handleError(res, err, "Failed to get books");
   }
 };
+
 
 exports.getBookByTitle = async (req, res) => {
   const db = getDB();
