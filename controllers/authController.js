@@ -151,6 +151,7 @@ const otpHandler = async (req, res) => {
       { email },
       { $set: { isVerified: true }, $unset: { otp: "", otpCreatedAt: "" } }
     );
+
     return res.status(200).json({ message: "OTP verified successfully" });
   } catch (err) {
     handleError(res, err, "OTP verification error");
