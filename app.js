@@ -6,7 +6,8 @@ const bookRoutes = require("./routes/bookRoutes");
 
 // init and middleware
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // or even '10mb' if needed
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // dbConnection
 connectDB()
@@ -24,6 +25,7 @@ const allowedOrigins = [
   "http://127.0.0.1:5500",
   "https://front-end-novel-oi5s.vercel.app",
   "https://front-end-novel.vercel.app",
+  "https://backendnovel-production.up.railway.app",
 ];
 
 app.use(
